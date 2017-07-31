@@ -4,7 +4,6 @@ from collections import OrderedDict
 from urllib.parse import quote
 
 import requests
-import xlsxwriter
 from model import Player, Clan
 
 token = os.getenv('API_TOKEN')
@@ -26,7 +25,7 @@ def fetch_all_players(clan):
     return __get_with_threads(urls)
 
 
-def export_clan(clan, stream):
+def fetch_transform_clan(clan):
     players = fetch_all_players(clan)
     players = [p.json() for p in players]
     [Player(**r).save() for r in players]
@@ -76,9 +75,6 @@ def export_clan(clan, stream):
         ('Grand Warden', 'Grand Warden')
     ))
 
-    workbook = xlsxwriter.Workbook(stream)
-    worksheet = workbook.add_worksheet()
-
     data = []
     for row in rows:
         data_row = []
@@ -96,7 +92,4 @@ def export_clan(clan, stream):
 
     data.insert(0, list(columns.values()))
 
-    for row, data in enumerate(data):
-        worksheet.write_row(row, 0, data)
-
-    workbook.close()
+    return data

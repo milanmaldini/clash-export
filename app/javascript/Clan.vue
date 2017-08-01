@@ -36,6 +36,7 @@ export default {
     return {
       loading: false,
       clan: null,
+      previousData: null,
     }
   },
   created() {
@@ -44,8 +45,15 @@ export default {
   methods: {
     async fetchData() {
       this.loading = true;
-      const response = await fetch(`/clan/${encodeURIComponent(this.tag)}.json`);
-      this.clan = await response.json();
+      const nowPromise = fetch(`/clan/${encodeURIComponent(this.tag)}.json`);
+      const previousPromise = fetch(`/clan/${encodeURIComponent(this.tag)}.json?daysAgo=${3}`);
+      
+      const nowResponse = await nowPromise;
+      const previousResponse = await previousPromise;
+
+      this.clan = await nowResponse.json();
+      this.previousData = await previousResponse.json();
+
       this.loading = false;
     }
   }

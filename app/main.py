@@ -1,13 +1,14 @@
 import os
-from io import BytesIO
-
-import api
-import uptime as uptime_api
+import xlsxwriter
 from flask import Flask, request, redirect, url_for, send_file, render_template, jsonify
+from io import BytesIO
 from mongoengine import connect
 from raven.contrib.flask import Sentry
 from uwsgidecorators import postfork
-import xlsxwriter
+
+import api
+import uptime as uptime_api
+from model import Clan
 
 
 @postfork
@@ -40,14 +41,21 @@ def search():
 @app.route("/clan/<path:tag>")
 def clan_detail(tag):
     tag, ext = os.path.splitext(tag)
-    clan = api.find_clan_by_tag(tag)
+    days_ago = request.args.get('daysAgo')
+    clan = Clan.from_now_with_tag(tag, days=int(days_ago))[0] if days_ago else api.find_clan_by_tag(tag)
 
     if 'tag' not in clan:
         return render_template('error.html'), 404
     elif ext == '.xlsx':
         return export(clan=clan, filename='%s.xlsx' % tag)
     elif ext == '.json':
-        return jsonify(api.fetch_transform_clan(clan))
+        if isinstance(clan, Clan):
+            clan.memberList = None
+            json = jsonify(api.transform_players(clan.players))
+        else:
+            json = jsonify(api.fetch_transform_clan(clan))
+
+        return json
     else:
         return render_template('clan.html', clan=clan)
 
@@ -55,17 +63,11 @@ def clan_detail(tag):
 def export(clan, filename):
     stream = BytesIO()
     data = api.fetch_transform_clan(clan)
-
     workbook = xlsxwriter.Workbook(stream)
     worksheet = workbook.add_worksheet()
-
-    for row, data in enumerate(data):
-        worksheet.write_row(row, 0, data)
-
+    for row, data in enumerate(data): worksheet.write_row(row, 0, data)
     workbook.close()
-
     stream.seek(0)
-
     return send_file(stream, attachment_filename=filename, as_attachment=True)
 
 

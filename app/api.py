@@ -1,9 +1,10 @@
 import concurrent.futures
-import os
-from collections import OrderedDict
 from urllib.parse import quote
 
+import os
 import requests
+from collections import OrderedDict
+
 from model import Player, Clan
 
 token = os.getenv('API_TOKEN')
@@ -32,7 +33,10 @@ def fetch_transform_clan(clan):
     clan['players'] = players
 
     Clan(**clan).save()
+    return transform_players(players)
 
+
+def transform_players(players):
     def player_row(player_json):
         achievements = {i['name']: i for i in player_json['achievements']}
         heroes = {i['name']: i for i in player_json['heroes']}

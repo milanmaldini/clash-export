@@ -44,9 +44,9 @@ def clan_detail(tag):
 
     if 'tag' not in clan:
         return render_template('error.html'), 404
-    elif tag == '.xlsx':
+    elif ext == '.xlsx':
         return export(clan=clan, filename='%s.xlsx' % tag)
-    elif tag == '.json':
+    elif ext == '.json':
         return jsonify(api.fetch_transform_clan(clan))
     else:
         return render_template('clan.html', clan=clan)

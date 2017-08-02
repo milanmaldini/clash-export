@@ -1,26 +1,26 @@
 <template>
   <div>
     <div class="has-text-centered" v-if="loading">Please wait...</div>
-    <table class="table is-narrow is-fullwidth is-striped" v-if="clan">
+    <table class="table is-narrow is-fullwidth is-striped" v-if="!loading">
       <thead>
         <tr>
-          <th v-for="header in clan[0]">
+          <th v-for="header in header">
             {{ header }}
           </th>
         </tr>
       </thead>
       <tfoot>
         <tr>
-          <th v-for="header in clan[0]">
+          <th v-for="header in header">
             {{ header }}
           </th>
         </tr>
       </tfoot>
       <tbody>
-        <tr v-for="row in clan.slice(1)">
-          <th>{{ row[0] }}</th>
-          <td v-for="column in row.slice(1)">
-            {{ column.toLocaleString() }}
+        <tr v-for="row in tableData">
+          <th>{{ row.name }}</th>
+          <td v-for="column in row.data">
+            {{ column.now.toLocaleString() }} ({{ column.delta }})
           </td>
         </tr>
       </tbody>
@@ -29,6 +29,7 @@
 </template>
 
 <script>
+import zip from 'lodash/zip'
 
 export default {
   props: ['tag'],
@@ -42,12 +43,41 @@ export default {
   created() {
     this.fetchData()
   },
+  computed: {
+    tableData() {
+      const clanRows = this.clan.slice(1);
+
+      // Map by user -> columns      
+      const previousPlayers = {};
+      this.previousData.slice(1).forEach(row => {
+        const [name, ...columns] = row;
+        previousPlayers[name] = columns;
+      });
+
+      return clanRows.map(row => {
+        const [name, ...columns] = row;
+        const previousColumns = previousPlayers[name]; // look up by player name
+
+        const zippedRow = zip(columns, previousColumns);
+        const data = zippedRow.map(item => {
+          const [now, previous] = item;
+
+          return { now, delta: now - previous, previous };
+        });
+
+        return { name, data };
+      });
+    },
+    header() {
+      return this.clan[0];
+    }
+  },
   methods: {
     async fetchData() {
       this.loading = true;
       const nowPromise = fetch(`/clan/${encodeURIComponent(this.tag)}.json`);
       const previousPromise = fetch(`/clan/${encodeURIComponent(this.tag)}.json?daysAgo=${3}`);
-      
+
       const nowResponse = await nowPromise;
       const previousResponse = await previousPromise;
 

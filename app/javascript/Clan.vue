@@ -41,7 +41,7 @@ export default {
     }
   },
   created() {
-    this.fetchData()
+    this.fetchData();    
   },
   computed: {
     tableData() {
@@ -85,7 +85,7 @@ export default {
       this.previousData = await previousResponse.json();
 
       this.loading = false;
-    }
+    }    
   }
 }
 </script>
@@ -94,4 +94,13 @@ export default {
 table {
   font-size: 90%;
 }
+
+thead{
+  background-color: #00d1b2;
+  
+  & th {
+    color: #fff;
+  }
+}
+
 </style>

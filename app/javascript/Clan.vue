@@ -1,45 +1,38 @@
 <template>
   <div>
-    <nav class="navbar ">
+    <nav class="navbar has-shadow">
       <div class="navbar-brand">
-        <a class="navbar-item" href="http://bulma.io">
-          <img src="http://bulma.io/images/bulma-logo.png" alt="Bulma: a modern CSS framework based on Flexbox" width="112" height="28">
-        </a>
+        <h1 class="navbar-item">
+          {{ name }}
+        </h1>
       </div>
-  
-      <div id="navMenuExample" class="navbar-menu">
+      <div class="navbar-menu">
         <div class="navbar-start">
-          <div class="navbar-item has-dropdown is-hoverable">
-            <a class="navbar-link  is-active" href="/documentation/overview/start/">
-              Docs
-            </a>
-            <div class="navbar-dropdown ">
-              <a class="navbar-item " href="/documentation/overview/start/">
-                Overview
-              </a>
-              <a class="navbar-item " href="http://bulma.io/documentation/layout/container/">
-                Layout
-              </a>
-              <hr class="navbar-divider">
-              <div class="navbar-item">
-                <div>
-                  <p class="is-size-6-desktop">
-                    <strong class="has-text-info">0.5.0</strong>
-                  </p>
-                  <small>
-                    <a class="view-all-versions" href="/versions">View all versions</a>
-                  </small>
-                </div>
+          <div class="navbar-item">
+            <div class="field has-addons">
+              <div class="control">
+                <a class="button" @click="loadDaysAgo(1)">
+                  Yesterday
+                </a>
+              </div>
+              <div class="control">
+                <a class="button is-info" @click="loadDaysAgo(7)">
+                  Last Week
+                </a>
+              </div>
+              <div class="control">
+                <a class="button" @click="loadDaysAgo(30)">
+                  Last Month
+                </a>
               </div>
             </div>
           </div>
         </div>
-  
         <div class="navbar-end">
           <div class="navbar-item">
             <div class="field is-grouped">
               <p class="control">
-                <a class="button is-primary" :href="`/clan/${encodeURIComponent(tag)}.xlsx`">
+                <a class="button is-danger" :href="`/clan/${encodeURIComponent(tag)}.xlsx`">
                   <span class="icon">
                     <i class="fa fa-download"></i>
                   </span>
@@ -72,7 +65,8 @@
           <th>{{ row.name }}</th>
           <td v-for="column in row.data">
             {{ column.now.toLocaleString() }}
-            <b v-if="column.delta != 0" :class="{up: column.delta > 0, down: column.delta < 0}">{{ Math.abs(column.delta).toLocaleString() }}</b>
+            <b v-if="column.delta != 0" :class="{up: column.delta > 0, down: column.delta < 0}">
+              <i :class="{'fa-arrow-up': column.delta > 0, 'fa-arrow-down': column.delta < 0, fa: true}" aria-hidden="true"></i> {{ Math.abs(column.delta).toLocaleString() }}</b>
           </td>
         </tr>
       </tbody>
@@ -84,7 +78,7 @@
 import zip from 'lodash/zip'
 
 export default {
-  props: ['tag'],
+  props: ['tag', 'name'],
   data() {
     return {
       loading: false,
@@ -108,7 +102,7 @@ export default {
 
       return clanRows.map(row => {
         const [name, ...columns] = row;
-        const previousColumns = previousPlayers[name]; // look up by player name
+        const previousColumns = previousPlayers[name];
 
         const zippedRow = zip(columns, previousColumns);
         const data = zippedRow.map(item => {
@@ -128,7 +122,7 @@ export default {
     async fetchData() {
       this.loading = true;
       const nowPromise = fetch(`/clan/${encodeURIComponent(this.tag)}.json`);
-      const previousPromise = fetch(`/clan/${encodeURIComponent(this.tag)}.json?daysAgo=${3}`);
+      const previousPromise = fetch(`/clan/${encodeURIComponent(this.tag)}.json?daysAgo=${7}`);
 
       const nowResponse = await nowPromise;
       const previousResponse = await previousPromise;
@@ -137,6 +131,10 @@ export default {
       this.previousData = await previousResponse.json();
 
       this.loading = false;
+    },
+    async loadDaysAgo(days){
+      const data = await fetch(`/clan/${encodeURIComponent(this.tag)}.json?daysAgo=${days}`);      
+      this.previousData = await data.json();
     }
   }
 }
@@ -159,17 +157,19 @@ thead {
   }
 }
 
-.up {
-  &::before {
-    content: '+';
-  }
-  color: #23d160;
-}
+b {
+  white-space: nowrap;
+  display: block;
+  line-height: 1;
+  margin-top: 5px;
+  font-size: 95%;
 
-.down {
-  &::before {
-    content: '-';
+  &.up {
+    color: #23d160;
   }
-  color: #ff3860;
+
+  &.down {
+    color: #ff3860;
+  }
 }
 </style>

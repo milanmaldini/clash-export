@@ -10,6 +10,7 @@ from model import Clan
 
 
 app = Flask(__name__)
+app.debug = os.getenv('DEBUG', False)
 sentry = Sentry(app)
 
 connect(db='clashstats', host='db', connect=False)

@@ -19,7 +19,7 @@
                 <a class="button" :class="{'is-warning': days == 7}" @click="loadDaysAgo(7)">
                   Last Week
                 </a>
-              </div>              
+              </div>
             </div>
           </div>
         </div>
@@ -42,7 +42,7 @@
     <section>
       <div class="has-text-centered" v-if="loading">Please wait...</div>
       <table class="table is-narrow is-fullwidth is-striped" v-if="!loading">
-        <thead>
+        <thead :class="{sticky: scrolling}" ref="header">
           <tr>
             <th v-for="header in header">
               {{ header }}
@@ -82,11 +82,16 @@ export default {
       loading: false,
       clan: null,
       previousData: null,
-      days: 7
+      days: 7,
+      scrolling: false
     }
   },
   created() {
     this.fetchData();
+    document.addEventListener('scroll', this.onScroll)
+  },
+  beforeDestroy: function () {
+    document.removeEventListener('scroll', this.onScroll)
   },
   computed: {
     tableData() {
@@ -101,7 +106,7 @@ export default {
 
       return clanRows.map(row => {
         const [name, ...columns] = row;
-        const previousColumns = previousPlayers[name];
+        const previousColumns = previousPlayers[name] || columns;
 
         const zippedRow = zip(columns, previousColumns);
         const data = zippedRow.map(item => {
@@ -135,6 +140,9 @@ export default {
       this.days = days;
       const data = await fetch(`/clan/${encodeURIComponent(this.tag)}.json?daysAgo=${days}`);
       this.previousData = await data.json();
+    },
+    onScroll() {      
+      this.scrolling = this.$refs.header.getBoundingClientRect().top <= 0 && window.scrollY > 0;
     }
   }
 }
@@ -180,5 +188,12 @@ b {
   &.down {
     color: #ff3860;
   }
+}
+
+thead.sticky {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
 }
 </style>

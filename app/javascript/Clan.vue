@@ -19,12 +19,7 @@
                 <a class="button" :class="{'is-warning': days == 7}" @click="loadDaysAgo(7)">
                   Last Week
                 </a>
-              </div>
-              <div class="control">
-                <a class="button" :class="{'is-warning': days == 30}" @click="loadDaysAgo(30)">
-                  Last Month
-                </a>
-              </div>
+              </div>              
             </div>
           </div>
         </div>

@@ -11,17 +11,17 @@
           <div class="navbar-item">
             <div class="field has-addons">
               <div class="control">
-                <a class="button" @click="loadDaysAgo(1)">
+                <a class="button" :class="{'is-warning': days == 1}" @click="loadDaysAgo(1)">
                   Yesterday
                 </a>
               </div>
               <div class="control">
-                <a class="button is-info" @click="loadDaysAgo(7)">
+                <a class="button" :class="{'is-warning': days == 7}" @click="loadDaysAgo(7)">
                   Last Week
                 </a>
               </div>
               <div class="control">
-                <a class="button" @click="loadDaysAgo(30)">
+                <a class="button" :class="{'is-warning': days == 30}" @click="loadDaysAgo(30)">
                   Last Month
                 </a>
               </div>
@@ -44,33 +44,36 @@
         </div>
       </div>
     </nav>
-    <div class="has-text-centered" v-if="loading">Please wait...</div>
-    <table class="table is-narrow is-fullwidth is-striped" v-if="!loading">
-      <thead>
-        <tr>
-          <th v-for="header in header">
-            {{ header }}
-          </th>
-        </tr>
-      </thead>
-      <tfoot>
-        <tr>
-          <th v-for="header in header">
-            {{ header }}
-          </th>
-        </tr>
-      </tfoot>
-      <tbody>
-        <tr v-for="row in tableData">
-          <th>{{ row.name }}</th>
-          <td v-for="column in row.data">
-            {{ column.now.toLocaleString() }}
-            <b v-if="column.delta != 0" :class="{up: column.delta > 0, down: column.delta < 0}">
-              <i :class="{'fa-arrow-up': column.delta > 0, 'fa-arrow-down': column.delta < 0, fa: true}" aria-hidden="true"></i> {{ Math.abs(column.delta).toLocaleString() }}</b>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <section>
+      <div class="has-text-centered" v-if="loading">Please wait...</div>
+      <table class="table is-narrow is-fullwidth is-striped" v-if="!loading">
+        <thead>
+          <tr>
+            <th v-for="header in header">
+              {{ header }}
+            </th>
+          </tr>
+        </thead>
+        <tfoot>
+          <tr>
+            <th v-for="header in header">
+              {{ header }}
+            </th>
+          </tr>
+        </tfoot>
+        <tbody>
+          <tr v-for="row in tableData">
+            <th>{{ row.name }}</th>
+            <td v-for="column in row.data">
+              {{ column.now.toLocaleString() }}
+              <b v-if="column.delta != 0" :class="{up: column.delta > 0, down: column.delta < 0}">
+                <i :class="{'fa-arrow-up': column.delta > 0, 'fa-arrow-down': column.delta < 0, fa: true}" aria-hidden="true"></i> {{ Math.abs(column.delta).toLocaleString() }}</b>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  
   </div>
 </template>
 
@@ -84,6 +87,7 @@ export default {
       loading: false,
       clan: null,
       previousData: null,
+      days: 7
     }
   },
   created() {
@@ -122,7 +126,7 @@ export default {
     async fetchData() {
       this.loading = true;
       const nowPromise = fetch(`/clan/${encodeURIComponent(this.tag)}.json`);
-      const previousPromise = fetch(`/clan/${encodeURIComponent(this.tag)}.json?daysAgo=${7}`);
+      const previousPromise = fetch(`/clan/${encodeURIComponent(this.tag)}.json?daysAgo=${this.days}`);
 
       const nowResponse = await nowPromise;
       const previousResponse = await previousPromise;
@@ -132,8 +136,9 @@ export default {
 
       this.loading = false;
     },
-    async loadDaysAgo(days){
-      const data = await fetch(`/clan/${encodeURIComponent(this.tag)}.json?daysAgo=${days}`);      
+    async loadDaysAgo(days) {
+      this.days = days;
+      const data = await fetch(`/clan/${encodeURIComponent(this.tag)}.json?daysAgo=${days}`);
       this.previousData = await data.json();
     }
   }
@@ -155,6 +160,15 @@ thead {
   & tr:hover {
     background-color: #00d1b2;
   }
+}
+
+section {
+  overflow-y: scroll;
+  max-width:
+}
+
+h1 {
+  font-size: 140%;
 }
 
 b {
